@@ -10,7 +10,7 @@
 # Stan Derksen
 # Falco IJben
 # Veerle van Winden
-
+# OVERAL WAAR APPELTAART STAAT MOETEN WIJ WAT DOEN CTRL F DIE SHIT
 
 
 """
@@ -139,7 +139,8 @@ def analyze_recurrence_equation(equation):
         equation = equation.replace(c_n, "", 1) # Remove the actual c_n from the equation (only once)
         associated[step_length] = c_n # Add the recursive step length and factor to the dictionary
         pos_s = equation.find("s(n-") # First position of recurrent part (because other "s(n-"-part is already removed)
-    # Sorry, but you will have to implement the treatment of F(n) yourself!
+    # Sorry, but you will have to implement the treatment of F(n) yourself! APPELTAART
+
     return associated, f_n_list
 
 """Reads in all lines of the file except the first, second and last one.
@@ -173,10 +174,11 @@ def fix_syntax(lines):
 """Finds a closed formula for a homogeneous recurrence relation.
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_homogeneous_equation(init_conditions, associated):
-    # You have to implement this yourself!
-    # 1: Rewrite the recurrence equation in default form (already done(?))
-    # 2: Determine the characteristic equation
-    # 3: Find the roots (sympy has a module roots() also gives multipies)
+    print("The associated incomming variable", associated)
+    # You have to implement this yourself! APPELTAART
+    # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
+    # 2: Determine the characteristic equation c_n already in associated
+    # 3: Find the roots (sympy has a module roots() also gives multiplicities)
     # 4: Find the general solution
     # 5: use the initial conditions to determine the exact value of alpha.
     
@@ -187,7 +189,7 @@ def solve_homogeneous_equation(init_conditions, associated):
     and "r*s^n" with r and s being real numbers.
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
-    # You have to implement this yourself!
+    # You have to implement this yourself! APPELTAART
     return result
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
@@ -232,7 +234,7 @@ else:
         if sys.argv[argv_index].find("/") != -1:
             path = sys.argv[argv_index]
     print(path)
-    for filename in glob.glob(path + "comass[0-9][0-9].txt"):
+    for filename in glob.glob(path + "/comass[0-9][0-9].txt"):
         print("File: "+filename)
         next_symbolic_var_index = 0 # Reset this index for every file
         debug_print("Beginning for file \"{0}\"".format(filename))
