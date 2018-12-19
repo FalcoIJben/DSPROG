@@ -6,6 +6,13 @@
 # Daniel Goßen
 # Hendrik Willing
 
+# Added by
+# Stan Derksen
+# Falco IJben
+# Veerle van Winden
+
+
+
 """
 SYNOPSIS
     co_rr_solver [OPTION] [DIRECTORY]
@@ -167,6 +174,12 @@ def fix_syntax(lines):
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_homogeneous_equation(init_conditions, associated):
     # You have to implement this yourself!
+    # 1: Rewrite the recurrence equation in default form (already done(?))
+    # 2: Determine the characteristic equation
+    # 3: Find the roots (sympy has a module roots() also gives multipies)
+    # 4: Find the general solution
+    # 5: use the initial conditions to determine the exact value of alpha.
+    
     return result
 
 """Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
