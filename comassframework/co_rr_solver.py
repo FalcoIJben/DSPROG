@@ -177,12 +177,77 @@ def solve_homogeneous_equation(init_conditions, associated):
     print("The associated incomming variable", associated)
     # You have to implement this yourself! APPELTAART
     # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
+    sorted_equation = rewrite_equation(associated)
     # 2: Determine the characteristic equation c_n already in associated
+    characteristic_equation = determine_characteristic_equation(sorted_equation)
     # 3: Find the roots (sympy has a module roots() also gives multiplicities)
+    poly_roots = find_roots(characteristic_equation)
     # 4: Find the general solution
+    general_solution = find_general_solution(poly_roots)
+
     # 5: use the initial conditions to determine the exact value of alpha.
-    
+    determine_alpha(init_conditions, general_solution)
+
     return result
+
+def rewrite_equation(equation):
+    result = {}
+    length = int(max(equation, key=int))
+    for key in range(1, length+1):
+        if key in equation:
+            result[key] = equation[key]
+        else:
+            result[key] = "+0*1"
+    print("sorted equation:", result)
+
+    return result
+
+def determine_characteristic_equation(equation):
+    result = {}
+    k = len(equation)
+    index = 0
+    result[index] = "1*r**%s" % k
+    k = k - 1
+    index = index + 1
+    for key in equation.keys():
+        result[index] = "%s*r**%s" % (equation[key].split("*")[0], k)
+        k = k - 1
+        index = index + 1
+
+    print("characteristic equation:", result)
+
+    return result
+
+def find_roots(equation):
+    poly_values = []
+    for key, value in equation.items():
+        poly_values.append(int(value.split("*r")[0]))
+
+    poly_roots = sy.roots(poly_values)
+    print("roots:", poly_roots)
+
+    return poly_roots
+
+def find_general_solution(roots):
+    #TODO: multiplicity more than 1
+    k = 1
+    result = "a_n = "
+    for key, value in roots.items():
+        result += "a_"+str(k)+" * ("+str(key)+")**n"
+        if list(roots.keys())[-1] != key:
+            result += " + "
+        k += 1
+
+    print("general solution: ", result)
+
+    return result
+
+def determine_alpha(init_conditions, general_solution):
+    #TODO: everything
+    #sqrt(x) = sy.sqrt(x), this gives problems :/
+    a1, a2 = sy.symbols('a_1, a_2')
+    print(sy.solve([a1 * (-2*sy.sqrt(2) - 2) ** 1 + a2 * (-2 + 2 * sy.sqrt(2)) ** 1 - 8, a1 * (-2 * sy.sqrt(2) - 2) ** 0 + a2 * (-2 + 2 * sy.sqrt(2)) ** 0 - 6], set=True))
+
 
 """Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
     of a linear combination of constants, "r*n^x" with r a real number and x a positive natural number,
