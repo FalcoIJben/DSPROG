@@ -29,6 +29,7 @@ DESCRIPTION
 
 import glob # Library for filename pattern-matching
 import sympy as sy
+from sympy.parsing.sympy_parser import parse_expr
 from sympy import sympify, roots, solve, expand, factor
 from sympy.abc import r, n
 import sys # For access to the given argument
@@ -184,11 +185,12 @@ def solve_homogeneous_equation(init_conditions, associated):
     poly_roots = find_roots(characteristic_equation)
     # 4: Find the general solution
     general_solution = find_general_solution(poly_roots)
-
+    # 4.5: Format for finding alpha
+    system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
     # 5: use the initial conditions to determine the exact value of alpha.
-    determine_alpha(init_conditions, general_solution)
+    determine_alpha(init_conditions, system)
 
-    return result
+    # return result
 
 def rewrite_equation(equation):
     result = {}
@@ -202,6 +204,7 @@ def rewrite_equation(equation):
 
     return result
 
+
 def determine_characteristic_equation(equation):
     result = {}
     k = len(equation)
@@ -210,7 +213,22 @@ def determine_characteristic_equation(equation):
     k = k - 1
     index = index + 1
     for key in equation.keys():
-        result[index] = "%s*r**%s" % (equation[key].split("*")[0], k)
+        partial_eq = "%s*r**%s" % (equation[key].split("*")[0], k)
+
+        #Hacky bugfix incoming
+        partial_eq = list(partial_eq)
+        if partial_eq[0] == '+':
+            partial_eq[0] = '-'
+            partial_eq = ''.join(partial_eq)
+        elif partial_eq[0] == '-':
+            partial_eq[0] = '+'
+            partial_eq = ''.join(partial_eq)
+        else:
+            partial_eq = ''.join(partial_eq)
+            partial_eq = '-' + partial_eq
+            partial_eq = ''.join(partial_eq)
+
+        result[index] = partial_eq
         k = k - 1
         index = index + 1
 
@@ -218,35 +236,64 @@ def determine_characteristic_equation(equation):
 
     return result
 
+
 def find_roots(equation):
     poly_values = []
     for key, value in equation.items():
-        poly_values.append(int(value.split("*r")[0]))
-
+        # poly_values.append(float(value.split("*r")[0]))
+        poly_values.append(parse_expr(value.split("*r")[0]))
     poly_roots = sy.roots(poly_values)
     print("roots:", poly_roots)
 
     return poly_roots
 
+
 def find_general_solution(roots):
-    #TODO: multiplicity more than 1
-    k = 1
     result = "a_n = "
-    for key, value in roots.items():
-        result += "a_"+str(k)+" * ("+str(key)+")**n"
-        if list(roots.keys())[-1] != key:
-            result += " + "
-        k += 1
-
-    print("general solution: ", result)
-
+    k = 1
+    for root in roots.keys():
+        multiplicity = roots[root]
+        if multiplicity == 1:
+            result += "a_" + str(k) + " * (" + str(root) + ")**n+"
+            k += 1
+        else:
+            for i in range(multiplicity):
+                result += 'a_' + str(k) + ' * (' + str(root) + ')**n * n**' + str(i) + ' +'
+                k += 1
+    result = list(result)
+    del result[-2:]
+    result = ''.join(result)
+    print('General solution: ' + result)
     return result
 
-def determine_alpha(init_conditions, general_solution):
+
+def format_general_solution_for_determining_alphas(general_solution, initial_conditions):
+    system = []
+
+    for n in initial_conditions.keys():
+        general_solution_copy = general_solution
+        s_n = str(initial_conditions[n])
+        n = str(n)
+        general_solution_copy = general_solution_copy.replace('*n','*'+n)
+        general_solution_copy = general_solution_copy.replace('n*', n+'*')
+        general_solution_copy = general_solution_copy[6:]
+        general_solution_copy = general_solution_copy + ' - ' + s_n
+        sy_exp = parse_expr(general_solution_copy)
+        system.append(sy_exp)
+    return system
+
+def create_list_of_alphas():
+    alphas = list(sy.symbols('a_1, a_2, a_3, a_4, a_5, a_6, a_7, a_8, a_9, a_10, a_11, a_12, a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20'))
+    return alphas
+
+def determine_alpha(init_conditions, system):
     #TODO: everything
     #sqrt(x) = sy.sqrt(x), this gives problems :/
+
     a1, a2 = sy.symbols('a_1, a_2')
-    print(sy.solve([a1 * (-2*sy.sqrt(2) - 2) ** 1 + a2 * (-2 + 2 * sy.sqrt(2)) ** 1 - 8, a1 * (-2 * sy.sqrt(2) - 2) ** 0 + a2 * (-2 + 2 * sy.sqrt(2)) ** 0 - 6], set=True))
+    # system = [a1 * 0.5 ** 0 + a2 * (-0.5) ** 0 - 1, a1 * 0.5 ** 1 + a2 * (-0.5) ** 1]
+    # print(sy.solve([a1 * (-2*sy.sqrt(2) - 2) ** 1 + a2 * (-2 + 2 * sy.sqrt(2)) ** 1 - 8, a1 * (-2 * sy.sqrt(2) - 2) ** 0 + a2 * (-2 + 2 * sy.sqrt(2)) ** 0 - 6], set=True))
+    print(sy.solve(system))
 
 
 """Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
@@ -254,8 +301,9 @@ def determine_alpha(init_conditions, general_solution):
     and "r*s^n" with r and s being real numbers.
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
+    v = 0
     # You have to implement this yourself! APPELTAART
-    return result
+    # return result
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
@@ -331,8 +379,8 @@ else:
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
         else:
             resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
-        resulting_equ = reformat_equation(resulting_equ)
-        write_output_to_file(output_filename, resulting_equ)
+        # resulting_equ = reformat_equation(resulting_equ)
+        # write_output_to_file(output_filename, resulting_equ)
 
         debug_print("#################################\n")
     print("Program is completely executed. There are no more recurrence relations to compute.")
