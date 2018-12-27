@@ -287,12 +287,7 @@ def create_list_of_alphas():
     return alphas
 
 def determine_alpha(init_conditions, system):
-    #TODO: everything
-    #sqrt(x) = sy.sqrt(x), this gives problems :/
 
-    a1, a2 = sy.symbols('a_1, a_2')
-    # system = [a1 * 0.5 ** 0 + a2 * (-0.5) ** 0 - 1, a1 * 0.5 ** 1 + a2 * (-0.5) ** 1]
-    # print(sy.solve([a1 * (-2*sy.sqrt(2) - 2) ** 1 + a2 * (-2 + 2 * sy.sqrt(2)) ** 1 - 8, a1 * (-2 * sy.sqrt(2) - 2) ** 0 + a2 * (-2 + 2 * sy.sqrt(2)) ** 0 - 6], set=True))
     print(sy.solve(system))
 
 
