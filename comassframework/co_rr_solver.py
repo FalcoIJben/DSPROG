@@ -188,9 +188,9 @@ def solve_homogeneous_equation(init_conditions, associated):
     # 4.5: Format for finding alpha
     system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
     # 5: use the initial conditions to determine the exact value of alpha.
-    determine_alpha(init_conditions, system)
-
-    # return result
+    d_alpha = determine_alpha(init_conditions, system)
+    result = make_result(d_alpha, general_solution)
+    return result
 
 def rewrite_equation(equation):
     result = {}
@@ -267,6 +267,7 @@ def find_general_solution(roots):
     return result
 
 
+
 def format_general_solution_for_determining_alphas(general_solution, initial_conditions):
     system = []
 
@@ -287,8 +288,18 @@ def create_list_of_alphas():
     return alphas
 
 def determine_alpha(init_conditions, system):
+    d_alpha = sy.solve(system)
+    print(d_alpha)
+    return d_alpha
 
-    print(sy.solve(system))
+def make_result(d_alpha, general):
+    result = general
+    for x in d_alpha.keys():
+        result = result.replace(str(x), str(d_alpha[x]))
+    print('Results: '+ result)
+    return result
+
+
 
 
 """Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
@@ -313,6 +324,7 @@ def write_output_to_file(filename, equation):
     - "sqrt(...)" is transformed back to "(...)^(1/2)".
     The return value is a string of the modified equation."""
 def reformat_equation(equation):
+    print(equation)
     equation = equation.replace("**", "^")
     pos_sqrt = equation.find("sqrt(")
     while pos_sqrt >= 0:
@@ -372,10 +384,11 @@ else:
         # Check if the equation is a homogeneous relation
         if not f_n_list: # The list is empty
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
-        else:
-            resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
-        # resulting_equ = reformat_equation(resulting_equ)
-        # write_output_to_file(output_filename, resulting_equ)
+        #else:
+
+            #resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
+        resulting_equ = reformat_equation(resulting_equ)
+        write_output_to_file(output_filename, resulting_equ)
 
         debug_print("#################################\n")
     print("Program is completely executed. There are no more recurrence relations to compute.")
