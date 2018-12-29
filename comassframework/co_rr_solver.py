@@ -141,7 +141,7 @@ def analyze_recurrence_equation(equation):
         associated[step_length] = c_n # Add the recursive step length and factor to the dictionary
         pos_s = equation.find("s(n-") # First position of recurrent part (because other "s(n-"-part is already removed)
     # Sorry, but you will have to implement the treatment of F(n) yourself! APPELTAART
-
+    f_n_list.append(equation)
     return associated, f_n_list
 
 """Reads in all lines of the file except the first, second and last one.
@@ -175,7 +175,8 @@ def fix_syntax(lines):
 """Finds a closed formula for a homogeneous recurrence relation.
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_homogeneous_equation(init_conditions, associated):
-    print("The associated incomming variable", associated)
+    debug_print("The associated incomming variable: ")
+    debug_print(associated)
     # You have to implement this yourself! APPELTAART
     # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
     sorted_equation = rewrite_equation(associated)
@@ -192,6 +193,38 @@ def solve_homogeneous_equation(init_conditions, associated):
     result = make_result(d_alpha, general_solution)
     return result
 
+
+"""Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
+    of a linear combination of constants, "r*n^x" with r a real number and x a positive natural number,
+    and "r*s^n" with r and s being real numbers.
+    The return value is a string of the right side of the equation "s(n) = ..."""
+def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
+    print('No homo')
+    debug_print("The associated incomming variable: ")
+    debug_print(associated)
+    # You have to implement this yourself! APPELTAART
+    # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
+    sorted_equation = rewrite_equation(associated)
+    # 2: Determine the characteristic equation c_n already in associated
+    characteristic_equation = determine_characteristic_equation(sorted_equation)
+    # 3: Find the roots (sympy has a module roots() also gives multiplicities)
+    poly_roots = find_roots(characteristic_equation)
+    # 4: Find the general solution of associated homogeneous equation
+    general_solution = find_general_solution(poly_roots)
+    system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
+    # 5: find a particular solution :( :(
+    particular_solution =find_particular_solution(f_n_list, associated)
+    # 6: Compute an = ap+ah
+    all_solutions = all_solutions_maker(general_solution, particular_solution)
+    # 7: use the initial conditions to determine the exact value of alpha.
+    #d_alpha = determine_alpha(init_conditions, system)
+    #result = make_result(d_alpha, general_solution)
+    #return result
+
+    # You have to implement this yourself! APPELTAART
+
+
+
 def rewrite_equation(equation):
     result = {}
     length = int(max(equation, key=int))
@@ -203,7 +236,6 @@ def rewrite_equation(equation):
     print("sorted equation:", result)
 
     return result
-
 
 def determine_characteristic_equation(equation):
     result = {}
@@ -236,7 +268,6 @@ def determine_characteristic_equation(equation):
 
     return result
 
-
 def find_roots(equation):
     poly_values = []
     for key, value in equation.items():
@@ -246,7 +277,6 @@ def find_roots(equation):
     print("roots:", poly_roots)
 
     return poly_roots
-
 
 def find_general_solution(roots):
     result = "a_n = "
@@ -265,8 +295,6 @@ def find_general_solution(roots):
     result = ''.join(result)
     print('General solution: ' + result)
     return result
-
-
 
 def format_general_solution_for_determining_alphas(general_solution, initial_conditions):
     system = []
@@ -299,17 +327,14 @@ def make_result(d_alpha, general):
     print('Results: '+ result)
     return result
 
+def find_particular_solution(f_n, ass):
+    print(f_n)
+    print(ass)
+    print('joepie')
 
 
-
-"""Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
-    of a linear combination of constants, "r*n^x" with r a real number and x a positive natural number,
-    and "r*s^n" with r and s being real numbers.
-    The return value is a string of the right side of the equation "s(n) = ..."""
-def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
-    v = 0
-    # You have to implement this yourself! APPELTAART
-    # return result
+def all_solutions_maker(gen, par):
+    print('to do')
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
@@ -384,9 +409,9 @@ else:
         # Check if the equation is a homogeneous relation
         if not f_n_list: # The list is empty
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
-        #else:
+        else:
 
-            #resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
+            resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
         resulting_equ = reformat_equation(resulting_equ)
         write_output_to_file(output_filename, resulting_equ)
 
