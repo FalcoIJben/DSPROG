@@ -140,9 +140,58 @@ def analyze_recurrence_equation(equation):
         equation = equation.replace(c_n, "", 1) # Remove the actual c_n from the equation (only once)
         associated[step_length] = c_n # Add the recursive step length and factor to the dictionary
         pos_s = equation.find("s(n-") # First position of recurrent part (because other "s(n-"-part is already removed)
-    # Sorry, but you will have to implement the treatment of F(n) yourself! APPELTAART
+
+    # The rest of the equation, the part that does not satisfies the s(n- thingy, is the F(n) part. APPELTAART
+    f_n_list = process_f_n_string(equation)
 
     return associated, f_n_list
+
+def process_f_n_string(equation):
+    if not equation:
+        return []
+    # To prevent false splitting, we first need to replace the content of brackets with 'appeltaart'
+    appeltaart_counter = 1
+    appeltaarten = {}
+    left_index = equation.find("(")
+    right_index = equation.find(")")
+    result = []
+
+    # Some magic to change some of the equation to appeltaart
+    #TODO: dit gaat nog fout bij bijv: (1 * (2 -7)), nested brackets. maar fuck dat
+    while(left_index != -1):
+        appeltaart = equation[left_index:right_index+1]
+        appeltaarten[appeltaart_counter] = appeltaart
+        replacement = "appeltaart_" + str(appeltaart_counter) + ";"
+        equation = equation.replace(appeltaart, replacement, 1)
+        appeltaart_counter += 1
+
+        left_index = equation.find("(")
+        right_index = equation.find(")")
+
+    # Split the string on the plusses without removing the plusses
+    parts = ["+" + e for e in equation.split("+") if e]
+
+    # Split the string on the minusses, and add them to the result list
+    for part in parts:
+        minusses = part.split("-")
+        # First minus is actually a plus
+        result.append(minusses[0])
+        for x in range(1, len(minusses)):
+            result.append(("-" + minusses[x]))
+
+
+    # Some magic to change the appeltaart back to maths :(
+    for x in range(0, len(result)):
+        r = result[x]
+        if "appeltaart" in r:
+            index1 = r.find("_")
+            index2 = r.find(";")
+            number = r[index1+1:index2]
+            result[x] = r.replace("appeltaart_"+number+";", appeltaarten[int(number)])
+
+    return result
+
+
 
 """Reads in all lines of the file except the first, second and last one.
     The lines are returned as list of strings."""
@@ -177,6 +226,7 @@ def fix_syntax(lines):
 def solve_homogeneous_equation(init_conditions, associated):
     print("The associated incomming variable", associated)
     # You have to implement this yourself! APPELTAART
+    return
     # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
     sorted_equation = rewrite_equation(associated)
     # 2: Determine the characteristic equation c_n already in associated
@@ -298,6 +348,7 @@ def determine_alpha(init_conditions, system):
 def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
     v = 0
     # You have to implement this yourself! APPELTAART
+
     # return result
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
