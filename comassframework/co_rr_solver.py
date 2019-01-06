@@ -376,10 +376,12 @@ def find_particular_solution(sorted_equation, f_n_list):
     else:
         print('Is constant')
         form = 'A'
-    # forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**(n)+C)', 'A*n+B', 'A']
-    # for form in forms:
-    # print('Form: ',form)
-    build_solution_form(form, sorted_equation, f_n_list)
+    forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**(n)+C)', 'A*n+B', 'A']
+    for form in forms:
+        print('Form: ',form)
+        result = build_solution_form(form, sorted_equation, f_n_list)
+        if isinstance(result, dict):
+            print('Result is: ', result)
 
 
 def build_solution_form(form, sorted_equation, f_n_list):
@@ -424,11 +426,10 @@ def build_solution_form(form, sorted_equation, f_n_list):
     print('Simplified equation: ',sy.nsimplify(eq))
     eq = sy.nsimplify(eq)
     # print('Factorised equation: ',sy.factor(eq))
-    print('sympy.solve(equation): ',sy.solve(eq,[A,B,C,D]))
-
-    # inp = sy.solve(eq)
+    # print('sympy.solve(equation): ',sy.solve(eq,[A,B,C,D]))
+    result = sy.solve(eq, [A,B,C,D])
     # recursive_solve_equation(eq,inp)
-    return eq
+    return result
 
 def recursive_solve_equation(equation, input):
     # Flag for sympy list lonnger than 1:
