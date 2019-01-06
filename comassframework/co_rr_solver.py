@@ -351,13 +351,6 @@ def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
     poly_roots = find_roots(characteristic_equation)
     # 4: Find the general solution
     general_solution = find_general_solution(poly_roots)
-
-    # 4: Find the general solution
-    general_solution = find_general_solution(poly_roots)
-    # 4.5: Format for finding alpha
-    system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
-
-
     # 5: Find a particular solution
     find_particular_solution(sorted_equation, f_n_list)
 
