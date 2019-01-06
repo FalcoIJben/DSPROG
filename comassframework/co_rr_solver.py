@@ -376,6 +376,9 @@ def find_particular_solution(sorted_equation, f_n_list):
     else:
         print('Is constant')
         form = 'A'
+    # forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**(n)+C)', 'A*n+B', 'A']
+    # for form in forms:
+    # print('Form: ',form)
     build_solution_form(form, sorted_equation, f_n_list)
 
 
@@ -384,8 +387,8 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
     # Brackets indicate separate parts (to be used later in the documentation of this function)
     # We know the form is '(A*n**2+B*n+C)'
-    A, B, C, D = sy.symbols('A B C D')
-    form = '(A*n**3+B*n**2+C*n+D)'
+    A, B, C, D, E = sy.symbols('A B C D E')
+    # form = '(A*n**3+B*n**2+C*n+D)'
     eq = ''
     for k in sorted_equation.keys():
         # We add the coeficient to the equation
@@ -406,7 +409,7 @@ def build_solution_form(form, sorted_equation, f_n_list):
     for f_n in f_n_list:
         f_n_final += f_n
     f_n_final += ')'
-    eq += '-1*'
+    eq += '+1*'
     eq += f_n_final
     # We now have: +0*1(A*n-1**2+B*n-1+C)+1*1(A*n-2**2+B*n-2+C)++0.5*n**2+0.5*n
     # To set it to zero, we substract the form (which translates to a_n) from the equation
@@ -420,11 +423,11 @@ def build_solution_form(form, sorted_equation, f_n_list):
     print('Equation: ',eq)
     print('Simplified equation: ',sy.nsimplify(eq))
     eq = sy.nsimplify(eq)
-    print('Factorised equation: ',sy.factor(eq))
-    print('sympy.solve(equation): ',sy.solve(eq,[A,B,C]))
+    # print('Factorised equation: ',sy.factor(eq))
+    print('sympy.solve(equation): ',sy.solve(eq,[A,B,C,D]))
 
-    inp = sy.solve(eq)
-    recursive_solve_equation(eq,inp)
+    # inp = sy.solve(eq)
+    # recursive_solve_equation(eq,inp)
     return eq
 
 def recursive_solve_equation(equation, input):
