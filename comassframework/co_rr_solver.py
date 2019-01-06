@@ -414,12 +414,28 @@ def build_solution_form(form, sorted_equation, f_n_list):
     eq = parse_expr(eq)
     print('Equation: ',eq)
     print('sympy.solve(equation): ',sy.solve(eq))
+    inp = sy.solve(eq)
+    recursive_solve_equation(eq,inp)
     return eq
 
 def recursive_solve_equation(equation, input):
+    # Flag for sympy list lonnger than 1:
+    if len(input) > 1:
+        print('SYMPY.SOLVE LIJST IS LANGER DAN 1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('recursive_solve_equation')
     #if input is not null -> rewrite symbols in equation (but in a copy of it
-
+    equation_copy_str = str(equation)
+    print('equation copy str: ',equation_copy_str)
+    if input:
+      for k in input[0].keys():
+          v = str(sy.simplify(input[0][k]))
+          k = str(k)
+          val = '(' + v + ')'
+          print('Symbol: ',k)
+          print('Value: ',val)
+          equation_copy_str = equation_copy_str.replace(k,val)
+    equation_copy = parse_expr(equation_copy_str)
+    print('Substituted A: ',equation_copy)
     #let sympy solve equation
     #ouput = sy.solve(equation)
 
