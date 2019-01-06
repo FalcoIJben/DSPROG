@@ -140,9 +140,58 @@ def analyze_recurrence_equation(equation):
         equation = equation.replace(c_n, "", 1) # Remove the actual c_n from the equation (only once)
         associated[step_length] = c_n # Add the recursive step length and factor to the dictionary
         pos_s = equation.find("s(n-") # First position of recurrent part (because other "s(n-"-part is already removed)
-    # Sorry, but you will have to implement the treatment of F(n) yourself! APPELTAART
+
+    # The rest of the equation, the part that does not satisfies the s(n- thingy, is the F(n) part. APPELTAART
+    f_n_list = process_f_n_string(equation)
 
     return associated, f_n_list
+
+def process_f_n_string(equation):
+    if not equation:
+        return []
+    # To prevent false splitting, we first need to replace the content of brackets with 'appeltaart'
+    appeltaart_counter = 1
+    appeltaarten = {}
+    left_index = equation.find("(")
+    right_index = equation.find(")")
+    result = []
+
+    # Some magic to change some of the equation to appeltaart
+    #TODO: dit gaat nog fout bij bijv: (1 * (2 -7)), nested brackets. maar fuck dat
+    while(left_index != -1):
+        appeltaart = equation[left_index:right_index+1]
+        appeltaarten[appeltaart_counter] = appeltaart
+        replacement = "appeltaart_" + str(appeltaart_counter) + ";"
+        equation = equation.replace(appeltaart, replacement, 1)
+        appeltaart_counter += 1
+
+        left_index = equation.find("(")
+        right_index = equation.find(")")
+
+    # Split the string on the plusses without removing the plusses
+    parts = ["+" + e for e in equation.split("+") if e]
+
+    # Split the string on the minusses, and add them to the result list
+    for part in parts:
+        minusses = part.split("-")
+        # First minus is actually a plus
+        result.append(minusses[0])
+        for x in range(1, len(minusses)):
+            result.append(("-" + minusses[x]))
+
+
+    # Some magic to change the appeltaart back to maths :(
+    for x in range(0, len(result)):
+        r = result[x]
+        if "appeltaart" in r:
+            index1 = r.find("_")
+            index2 = r.find(";")
+            number = r[index1+1:index2]
+            result[x] = r.replace("appeltaart_"+number+";", appeltaarten[int(number)])
+
+    return result
+
+
 
 """Reads in all lines of the file except the first, second and last one.
     The lines are returned as list of strings."""
@@ -278,9 +327,12 @@ def format_general_solution_for_determining_alphas(general_solution, initial_con
         general_solution_copy = general_solution_copy.replace('n*', n+'*')
         general_solution_copy = general_solution_copy[6:]
         general_solution_copy = general_solution_copy + ' - ' + s_n
+        print('test sympy: ',general_solution_copy)
         sy_exp = parse_expr(general_solution_copy)
         system.append(sy_exp)
+    print(system)
     return system
+
 
 def create_list_of_alphas():
     alphas = list(sy.symbols('a_1, a_2, a_3, a_4, a_5, a_6, a_7, a_8, a_9, a_10, a_11, a_12, a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20'))
@@ -297,8 +349,88 @@ def determine_alpha(init_conditions, system):
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
     v = 0
-    # You have to implement this yourself! APPELTAART
-    # return result
+    # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
+    sorted_equation = rewrite_equation(associated)
+    # 2: Determine the characteristic equation c_n already in associated
+    characteristic_equation = determine_characteristic_equation(sorted_equation)
+    # 3: Find the roots (sympy has a module roots() also gives multiplicities)
+    poly_roots = find_roots(characteristic_equation)
+    # 4: Find the general solution
+    general_solution = find_general_solution(poly_roots)
+
+    # 4: Find the general solution
+    general_solution = find_general_solution(poly_roots)
+    # 4.5: Format for finding alpha
+    system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
+
+
+    # 5: Find a particular solution
+    find_particular_solution(sorted_equation, f_n_list)
+
+
+
+def find_particular_solution(sorted_equation, f_n_list):
+    # Determine type of F(n)
+    if is_to_the_fourth(f_n_list):
+        print('Is to the fourth')
+    elif is_cubic(f_n_list):
+        print('Is cubic')
+    elif is_quadratic(f_n_list):
+        print('Is quadratic')
+        form = '(A*n**2+B*n+C)'
+        build_solution_form(form, sorted_equation, f_n_list)
+    elif is_exponential(f_n_list):
+        print('Is exponential')
+        form = '(A*B**(n)+C)'
+    elif is_linear(f_n_list):
+        print('Is linear')
+    else:
+        print('Is constant')
+    build_solution_form(form, sorted_equation, f_n_list)
+
+
+def build_solution_form(form, sorted_equation, f_n_list):
+    # WARNING works for only a single an_ variable
+    # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
+    # Brackets indicate separate parts (to be used later in the documentation of this function)
+    # We know the form is '(A*n**2+B*n+C)'
+    eq = ''
+    for k in sorted_equation.keys():
+        # We add the coeficient to the equation
+        current = sorted_equation[k] + '*'
+        eq += current
+        new_n = '(n-' + str(k) + ')'
+        new_form = form.replace('n',new_n)
+        eq += new_form
+        eq += '+'
+    # Remove the last +
+    eq = eq[:-1]
+    # Remove the first char
+    eq = eq[1:]
+    print('without +: ', eq)
+    # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
+    # As an_(-1) = 0 and an_(-2) = 1
+    print('coefficients: ', eq)
+    # We combine the f_n_list to a single string to obtain F(n)
+    f_n_final = ''
+    for f_n in f_n_list:
+        f_n_final += f_n
+    eq += f_n_final
+    print('eq: ', eq)
+    # We now have: +0*1(A*n-1**2+B*n-1+C)+1*1(A*n-2**2+B*n-2+C)++0.5*n**2+0.5*n
+    # To set it to zero, we substract the form (which translates to a_n) from the equation
+    eq += '-'
+    eq += form
+    print(eq)
+    # We now have '1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)'
+    # or with brackets: '[1(A*n**2+B*n+C)] + [0.5*n**2+0.5*n] - [(A*n**2+B*n+C)]'
+    # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
+    eq = parse_expr(eq)
+    print(eq)
+    print(sy.simplify(eq))
+    print(sy.solve(eq))
+    return eq
+
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
@@ -321,6 +453,43 @@ def reformat_equation(equation):
         equation = equation.replace("sqrt", "", 1)
         pos_sqrt = equation.find("sqrt(")
     return equation
+
+# Functions for determining type of F(n)
+
+
+def is_linear(f_n):
+    for f in f_n:
+        if '*' in f:
+            return True
+    return False
+
+
+def is_quadratic(f_n):
+    for f in f_n:
+        if '**2' in f:
+            return True
+    return False
+
+
+def is_exponential(f_n):
+    for f in f_n:
+        if '**(n' in f:
+            return True
+    return False
+
+
+def is_cubic(f_n):
+    for f in f_n:
+        if '**3' in f:
+            return True
+    return False
+
+
+def is_to_the_fourth(f_n):
+    for f in f_n:
+        if '**4' in f:
+            return True
+    return False
 
 # Begin of program:
 if len(sys.argv) > 3:
@@ -369,6 +538,7 @@ else:
 
         output_filename = filename.replace(".txt", "-dir.txt")
         resulting_equ = ""
+        print('fn_list: ',f_n_list)
         # Check if the equation is a homogeneous relation
         if not f_n_list: # The list is empty
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
