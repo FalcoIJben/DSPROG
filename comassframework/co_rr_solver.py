@@ -416,6 +416,21 @@ def build_solution_form(form, sorted_equation, f_n_list):
     print('sympy.solve(equation): ',sy.solve(eq))
     return eq
 
+def recursive_solve_equation(equation, input):
+    print('recursive_solve_equation')
+    #if input is not null -> rewrite symbols in equation (but in a copy of it
+
+    #let sympy solve equation
+    #ouput = sy.solve(equation)
+
+    #if there more symbols in output
+        #call recursive_solve_equation(equation, output)
+
+    #rewrite equation with known symbols
+
+    #return output
+
+
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
