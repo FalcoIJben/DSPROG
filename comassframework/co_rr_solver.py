@@ -384,6 +384,7 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
     # Brackets indicate separate parts (to be used later in the documentation of this function)
     # We know the form is '(A*n**2+B*n+C)'
+    A, B, C, D = sy.symbols('A B C D')
     form = '(A*n**3+B*n**2+C*n+D)'
     eq = ''
     for k in sorted_equation.keys():
@@ -401,22 +402,26 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
     # As an_(-1) = 0 and an_(-2) = 1
     # We combine the f_n_list to a single string to obtain F(n)
-    f_n_final = ''
+    f_n_final = '('
     for f_n in f_n_list:
         f_n_final += f_n
+    f_n_final += ')'
+    eq += '-1*'
     eq += f_n_final
     # We now have: +0*1(A*n-1**2+B*n-1+C)+1*1(A*n-2**2+B*n-2+C)++0.5*n**2+0.5*n
     # To set it to zero, we substract the form (which translates to a_n) from the equation
-    eq += '-'
+    eq += '-1*'
     eq += form
     # We now have '1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)'
     # or with brackets: '[1(A*n**2+B*n+C)] + [0.5*n**2+0.5*n] - [(A*n**2+B*n+C)]'
     # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
+    print(eq)
     eq = parse_expr(eq)
     print('Equation: ',eq)
-    print('Simplified equation: ',sy.simplify(eq))
-    eq = sy.simplify(eq)
-    print('sympy.solve(equation): ',sy.solve(eq))
+    print('Simplified equation: ',sy.nsimplify(eq))
+    eq = sy.nsimplify(eq)
+    print('Factorised equation: ',sy.factor(eq))
+    print('sympy.solve(equation): ',sy.solve(eq,[A,B,C]))
 
     inp = sy.solve(eq)
     recursive_solve_equation(eq,inp)
@@ -440,7 +445,7 @@ def recursive_solve_equation(equation, input):
           equation_copy_str = equation_copy_str.replace(k,val)
     print('String substituted A: ',equation_copy_str)
     equation_copy = parse_expr(equation_copy_str)
-    equation_copy = sy.simplify(equation_copy)
+    equation_copy = sy.nsimplify(equation_copy)
     print('Substituted A: ',equation_copy)
 
     #let sympy solve equation
