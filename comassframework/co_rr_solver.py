@@ -303,13 +303,14 @@ def find_general_solution(roots):
     for root in roots.keys():
         multiplicity = roots[root]
         if multiplicity == 1:
-            result += "a_" + str(k) + " * (" + str(root) + ")**n+"
+            result += "a_" + str(k) + " * (" + str(root) + ")**n +"
             k += 1
         else:
             for i in range(multiplicity):
                 result += 'a_' + str(k) + ' * (' + str(root) + ')**n * n**' + str(i) + ' +'
                 k += 1
     result = list(result)
+    print('test: ',result)
     del result[-2:]
     result = ''.join(result)
     print('General solution: ' + result)
@@ -382,6 +383,7 @@ def find_particular_solution(sorted_equation, f_n_list):
         result = build_solution_form(form, sorted_equation, f_n_list)
         if isinstance(result, dict):
             print('Result is: ', result)
+            break
 
 
 def build_solution_form(form, sorted_equation, f_n_list):
@@ -391,7 +393,7 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # We know the form is '(A*n**2+B*n+C)'
     A, B, C, D, E = sy.symbols('A B C D E')
     # form = '(A*n**3+B*n**2+C*n+D)'
-    eq = ''
+    eq = '1'
     for k in sorted_equation.keys():
         # We add the coeficient to the equation
         current = sorted_equation[k] + '*'
