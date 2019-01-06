@@ -384,6 +384,7 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
     # Brackets indicate separate parts (to be used later in the documentation of this function)
     # We know the form is '(A*n**2+B*n+C)'
+    form = '(A*n**3+B*n**2+C*n+D)'
     eq = ''
     for k in sorted_equation.keys():
         # We add the coeficient to the equation
@@ -413,7 +414,10 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
     eq = parse_expr(eq)
     print('Equation: ',eq)
+    print('Simplified equation: ',sy.simplify(eq))
+    eq = sy.simplify(eq)
     print('sympy.solve(equation): ',sy.solve(eq))
+
     inp = sy.solve(eq)
     recursive_solve_equation(eq,inp)
     return eq
@@ -434,10 +438,14 @@ def recursive_solve_equation(equation, input):
           print('Symbol: ',k)
           print('Value: ',val)
           equation_copy_str = equation_copy_str.replace(k,val)
+    print('String substituted A: ',equation_copy_str)
     equation_copy = parse_expr(equation_copy_str)
+    equation_copy = sy.simplify(equation_copy)
     print('Substituted A: ',equation_copy)
+
     #let sympy solve equation
-    #ouput = sy.solve(equation)
+    output = sy.solve(equation_copy)
+    print('New output: ', output)
 
     #if there more symbols in output
         #call recursive_solve_equation(equation, output)
