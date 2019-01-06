@@ -327,16 +327,10 @@ def format_general_solution_for_determining_alphas(general_solution, initial_con
         general_solution_copy = general_solution_copy.replace('n*', n+'*')
         general_solution_copy = general_solution_copy[6:]
         general_solution_copy = general_solution_copy + ' - ' + s_n
-        print('test sympy: ',general_solution_copy)
         sy_exp = parse_expr(general_solution_copy)
         system.append(sy_exp)
-    print(system)
     return system
 
-
-def create_list_of_alphas():
-    alphas = list(sy.symbols('a_1, a_2, a_3, a_4, a_5, a_6, a_7, a_8, a_9, a_10, a_11, a_12, a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20'))
-    return alphas
 
 def determine_alpha(init_conditions, system):
 
@@ -373,19 +367,22 @@ def find_particular_solution(sorted_equation, f_n_list):
     # Determine type of F(n)
     if is_to_the_fourth(f_n_list):
         print('Is to the fourth')
+        form = '(A*n**4+B*n**3+C*n**2+D*n+E)'
     elif is_cubic(f_n_list):
         print('Is cubic')
+        form = '(A*n**3+B*n**2+C*n+D)'
     elif is_quadratic(f_n_list):
         print('Is quadratic')
         form = '(A*n**2+B*n+C)'
-        build_solution_form(form, sorted_equation, f_n_list)
     elif is_exponential(f_n_list):
         print('Is exponential')
         form = '(A*B**(n)+C)'
     elif is_linear(f_n_list):
         print('Is linear')
+        form = 'A*n+B'
     else:
         print('Is constant')
+        form = 'A'
     build_solution_form(form, sorted_equation, f_n_list)
 
 
@@ -407,28 +404,23 @@ def build_solution_form(form, sorted_equation, f_n_list):
     eq = eq[:-1]
     # Remove the first char
     eq = eq[1:]
-    print('without +: ', eq)
     # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
     # As an_(-1) = 0 and an_(-2) = 1
-    print('coefficients: ', eq)
     # We combine the f_n_list to a single string to obtain F(n)
     f_n_final = ''
     for f_n in f_n_list:
         f_n_final += f_n
     eq += f_n_final
-    print('eq: ', eq)
     # We now have: +0*1(A*n-1**2+B*n-1+C)+1*1(A*n-2**2+B*n-2+C)++0.5*n**2+0.5*n
     # To set it to zero, we substract the form (which translates to a_n) from the equation
     eq += '-'
     eq += form
-    print(eq)
     # We now have '1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)'
     # or with brackets: '[1(A*n**2+B*n+C)] + [0.5*n**2+0.5*n] - [(A*n**2+B*n+C)]'
     # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
     eq = parse_expr(eq)
-    print(eq)
-    print(sy.simplify(eq))
-    print(sy.solve(eq))
+    print('Equation: ',eq)
+    print('sympy.solve(equation): ',sy.solve(eq))
     return eq
 
 
