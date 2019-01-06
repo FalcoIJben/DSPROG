@@ -310,7 +310,6 @@ def find_general_solution(roots):
                 result += 'a_' + str(k) + ' * (' + str(root) + ')**n * n**' + str(i) + ' +'
                 k += 1
     result = list(result)
-    print('test: ',result)
     del result[-2:]
     result = ''.join(result)
     print('General solution: ' + result)
@@ -358,51 +357,41 @@ def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
 
 
 def find_particular_solution(sorted_equation, f_n_list):
-    # Determine type of F(n)
-    if is_to_the_fourth(f_n_list):
-        print('Is to the fourth')
-        form = '(A*n**4+B*n**3+C*n**2+D*n+E)'
-    elif is_cubic(f_n_list):
-        print('Is cubic')
-        form = '(A*n**3+B*n**2+C*n+D)'
-    elif is_quadratic(f_n_list):
-        print('Is quadratic')
-        form = '(A*n**2+B*n+C)'
-    elif is_exponential(f_n_list):
-        print('Is exponential')
-        form = '(A*B**(n)+C)'
-    elif is_linear(f_n_list):
-        print('Is linear')
-        form = 'A*n+B'
-    else:
-        print('Is constant')
-        form = 'A'
-    forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**n+C)', 'A*n+B', 'A']
-    for form in forms:
-        print('Form: ',form)
-        result = build_solution_form(form, sorted_equation, f_n_list)
-        if isinstance(result, dict):
+
+    A, B, C, D, E = sy.symbols('A B C D E')
+    forms_dict = {'(A*n**4+B*n**3+C*n**2+D*n+E)':[A,B,C,D,E],
+                  '(A*n**3+B*n**2+C*n+D)':[A,B,C,D],
+                  '(A*n**2+B*n+C)':[A,B,C],
+                  '(A*B**n+C)':[A,C],
+                  '(A*B**n)':[A],
+                  'A*n+B':[A,B],
+                  'A':[A]}
+    for form in forms_dict.keys():
+        result = build_solution_form(form, sorted_equation, f_n_list,forms_dict[form])
+        result = result[0]
+        flag = False
+        for k in result.keys():
+            s = str(result[k])
+            if 'A' in s or 'B' in s or 'C' in s or 'D' in s or 'E' in s:
+                flag = True
+        if not flag:
+            print('Form is: ',form)
             print('Result is: ', result)
             break
 
 
-def build_solution_form(form, sorted_equation, f_n_list):
+def build_solution_form(form, sorted_equation, f_n_list, symbols):
     # WARNING works for only a single an_ variable
     # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
     # Brackets indicate separate parts (to be used later in the documentation of this function)
     # We know the form is '(A*n**2+B*n+C)'
-    A, B, C, D, E = sy.symbols('A B C D E')
-    # form = '(A*n**3+B*n**2+C*n+D)'
-    if form == '(A*B**n+C)':
+    if form == '(A*B**n+C)' or form == '(A*B**n)':
         b_val = 'B'
         for fn in f_n_list:
             if '**(n' in fn:
-                #NOTE bugs if the base of the exponent is not at +10**(n-1) but is preceeded by another term
-                print('ik kom hier')
+                # NOTE bugs if the base of the exponent is not at +10**(n-1) but is preceeded by another term
                 b_val = fn[1:fn.find('**')]
-                print(b_val)
         form = form.replace('B',b_val)
-    print('test form: ',form)
     eq = ''
     for k in sorted_equation.keys():
         # We add the coeficient to the equation
@@ -414,8 +403,6 @@ def build_solution_form(form, sorted_equation, f_n_list):
         eq += '+'
     # Remove the last +
     eq = eq[:-1]
-    # Remove the first char
-    # eq = eq[1:]
     # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
     # As an_(-1) = 0 and an_(-2) = 1
     # We combine the f_n_list to a single string to obtain F(n)
@@ -432,49 +419,10 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # We now have '1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)'
     # or with brackets: '[1(A*n**2+B*n+C)] + [0.5*n**2+0.5*n] - [(A*n**2+B*n+C)]'
     # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
-    print(eq)
     eq = parse_expr(eq)
-    print('Equation: ',eq)
-    print('Simplified equation: ',sy.nsimplify(eq))
     eq = sy.nsimplify(eq)
-    # print('Factorised equation: ',sy.factor(eq))
-    # print('sympy.solve(equation): ',sy.solve(eq,[A,B,C,D]))
-    result = sy.solve(eq, [A,B,C,D])
-    # recursive_solve_equation(eq,inp)
+    result = sy.solve(eq, symbols, dict=True)
     return result
-
-def recursive_solve_equation(equation, input):
-    # Flag for sympy list lonnger than 1:
-    if len(input) > 1:
-        print('SYMPY.SOLVE LIJST IS LANGER DAN 1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    print('recursive_solve_equation')
-    #if input is not null -> rewrite symbols in equation (but in a copy of it
-    equation_copy_str = str(equation)
-    print('equation copy str: ',equation_copy_str)
-    if input:
-      for k in input[0].keys():
-          v = str(sy.simplify(input[0][k]))
-          k = str(k)
-          val = '(' + v + ')'
-          print('Symbol: ',k)
-          print('Value: ',val)
-          equation_copy_str = equation_copy_str.replace(k,val)
-    print('String substituted A: ',equation_copy_str)
-    equation_copy = parse_expr(equation_copy_str)
-    equation_copy = sy.nsimplify(equation_copy)
-    print('Substituted A: ',equation_copy)
-
-    #let sympy solve equation
-    output = sy.solve(equation_copy)
-    print('New output: ', output)
-
-    #if there more symbols in output
-        #call recursive_solve_equation(equation, output)
-
-    #rewrite equation with known symbols
-
-    #return output
-
 
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
