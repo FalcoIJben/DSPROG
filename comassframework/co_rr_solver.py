@@ -377,7 +377,7 @@ def find_particular_solution(sorted_equation, f_n_list):
     else:
         print('Is constant')
         form = 'A'
-    forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**(n)+C)', 'A*n+B', 'A']
+    forms = ['(A*n**4+B*n**3+C*n**2+D*n+E)', '(A*n**3+B*n**2+C*n+D)', '(A*n**2+B*n+C)', '(A*B**n+C)', 'A*n+B', 'A']
     for form in forms:
         print('Form: ',form)
         result = build_solution_form(form, sorted_equation, f_n_list)
@@ -393,7 +393,17 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # We know the form is '(A*n**2+B*n+C)'
     A, B, C, D, E = sy.symbols('A B C D E')
     # form = '(A*n**3+B*n**2+C*n+D)'
-    eq = '1'
+    if form == '(A*B**n+C)':
+        b_val = 'B'
+        for fn in f_n_list:
+            if '**(n' in fn:
+                #NOTE bugs if the base of the exponent is not at +10**(n-1) but is preceeded by another term
+                print('ik kom hier')
+                b_val = fn[1:fn.find('**')]
+                print(b_val)
+        form = form.replace('B',b_val)
+    print('test form: ',form)
+    eq = ''
     for k in sorted_equation.keys():
         # We add the coeficient to the equation
         current = sorted_equation[k] + '*'
@@ -405,7 +415,7 @@ def build_solution_form(form, sorted_equation, f_n_list):
     # Remove the last +
     eq = eq[:-1]
     # Remove the first char
-    eq = eq[1:]
+    # eq = eq[1:]
     # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
     # As an_(-1) = 0 and an_(-2) = 1
     # We combine the f_n_list to a single string to obtain F(n)
