@@ -237,9 +237,11 @@ def solve_homogeneous_equation(init_conditions, associated):
     # 4.5: Format for finding alpha
     system = format_general_solution_for_determining_alphas(general_solution, init_conditions)
     # 5: use the initial conditions to determine the exact value of alpha.
-    determine_alpha(init_conditions, system)
+    alphas = determine_alpha(init_conditions, system)
+    result = replace_alphas_in_solution(general_solution, alphas)
+    print('the ultimate result is: ' + result)
 
-    # return result
+    return result
 
 def rewrite_equation(equation):
     result = {}
@@ -252,6 +254,14 @@ def rewrite_equation(equation):
     print("sorted equation:", result)
 
     return result
+
+def replace_alphas_in_solution(solution, alphas):
+    if type(alphas) == type([]):
+        alphas = alphas[0]
+    for a in alphas.keys():
+        solution = solution.replace(str(a), str(sy.nsimplify(alphas[a])))
+
+    return solution
 
 
 def determine_characteristic_equation(equation):
@@ -294,6 +304,7 @@ def find_roots(equation):
     poly_roots = sy.roots(poly_values)
     print("roots:", poly_roots)
 
+
     return poly_roots
 
 
@@ -303,11 +314,11 @@ def find_general_solution(roots):
     for root in roots.keys():
         multiplicity = roots[root]
         if multiplicity == 1:
-            result += "a_" + str(k) + " * (" + str(root) + ")**n +"
+            result += "a_" + str(k) + " * (" + str(sy.nsimplify(root)) + ")**n +"
             k += 1
         else:
             for i in range(multiplicity):
-                result += 'a_' + str(k) + ' * (' + str(root) + ')**n * n**' + str(i) + ' +'
+                result += 'a_' + str(k) + ' * (' + str(sy.nsimplify(root)) + ')**n * n**' + str(i) + ' +'
                 k += 1
     result = list(result)
     del result[-2:]
@@ -333,9 +344,10 @@ def format_general_solution_for_determining_alphas(general_solution, initial_con
 
 
 def determine_alpha(init_conditions, system):
+    result = sy.solve(system)
+    print(result)
 
-    print(sy.solve(system))
-
+    return result
 
 """Finds a closed formula for a nonhomogeneous equation, where the nonhomogeneous part consists
     of a linear combination of constants, "r*n^x" with r a real number and x a positive natural number,
@@ -352,8 +364,21 @@ def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
     # 4: Find the general solution
     general_solution = find_general_solution(poly_roots)
     # 5: Find a particular solution
-    find_particular_solution(sorted_equation, f_n_list)
+    particular_solution = find_particular_solution(sorted_equation, f_n_list)
+    print('particular_solution: ' + str(particular_solution))
+    print('general_solution: ' + str(general_solution))
+    # 6: plak shit aan elkaar
+    solution = general_solution + ' + ' + particular_solution
+    print('solution: ' + solution)
+    # 7: laat sympy de shot oplossen
+    system_of_eq = format_general_solution_for_determining_alphas(solution, init_conditions)
+    print('sys of eq: ')
+    print(system_of_eq)
+    alphas = determine_alpha(init_conditions, system_of_eq)
+    result = replace_alphas_in_solution(solution, alphas)
+    print('the ultimate result is: ' + result)
 
+    return result
 
 
 def find_particular_solution(sorted_equation, f_n_list):
@@ -377,7 +402,16 @@ def find_particular_solution(sorted_equation, f_n_list):
         if not flag:
             print('Form is: ',form)
             print('Result is: ', result)
-            break
+
+            for k in result.keys():
+                form = form.replace(str(k), str(result[k]))
+            print(form)
+
+            return form
+
+    return 'appeltaart'
+
+
 
 
 def build_solution_form(form, sorted_equation, f_n_list, symbols):
@@ -385,12 +419,14 @@ def build_solution_form(form, sorted_equation, f_n_list, symbols):
     # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
     # Brackets indicate separate parts (to be used later in the documentation of this function)
     # We know the form is '(A*n**2+B*n+C)'
+    b_val = 'appeltaart'
     if form == '(A*B**n+C)' or form == '(A*B**n)':
         b_val = 'B'
         for fn in f_n_list:
             if '**(n' in fn:
                 # NOTE bugs if the base of the exponent is not at +10**(n-1) but is preceeded by another term
                 b_val = fn[1:fn.find('**')]
+
         form = form.replace('B',b_val)
     eq = ''
     for k in sorted_equation.keys():
@@ -422,6 +458,9 @@ def build_solution_form(form, sorted_equation, f_n_list, symbols):
     eq = parse_expr(eq)
     eq = sy.nsimplify(eq)
     result = sy.solve(eq, symbols, dict=True)
+    if b_val != 'appeltaart':
+        result[0]['B'] = b_val
+
     return result
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
@@ -535,8 +574,8 @@ else:
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
         else:
             resulting_equ = solve_nonhomogeneous_equation(init_conditions, associated, f_n_list)
-        # resulting_equ = reformat_equation(resulting_equ)
-        # write_output_to_file(output_filename, resulting_equ)
+        resulting_equ = reformat_equation(str(sy.nsimplify(resulting_equ[6:])))
+        write_output_to_file(output_filename, resulting_equ)
 
         debug_print("#################################\n")
     print("Program is completely executed. There are no more recurrence relations to compute.")
