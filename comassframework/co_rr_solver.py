@@ -226,7 +226,6 @@ def fix_syntax(lines):
 def solve_homogeneous_equation(init_conditions, associated):
     print("The associated incomming variable", associated)
     # You have to implement this yourself! APPELTAART
-    return
     # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
     sorted_equation = rewrite_equation(associated)
     # 2: Determine the characteristic equation c_n already in associated
@@ -304,7 +303,7 @@ def find_general_solution(roots):
     for root in roots.keys():
         multiplicity = roots[root]
         if multiplicity == 1:
-            result += "a_" + str(k) + " * (" + str(root) + ")**n+"
+            result += "a_" + str(k) + " * (" + str(root) + ")**n +"
             k += 1
         else:
             for i in range(multiplicity):
@@ -332,9 +331,6 @@ def format_general_solution_for_determining_alphas(general_solution, initial_con
         system.append(sy_exp)
     return system
 
-def create_list_of_alphas():
-    alphas = list(sy.symbols('a_1, a_2, a_3, a_4, a_5, a_6, a_7, a_8, a_9, a_10, a_11, a_12, a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20'))
-    return alphas
 
 def determine_alpha(init_conditions, system):
 
@@ -347,9 +343,86 @@ def determine_alpha(init_conditions, system):
     The return value is a string of the right side of the equation "s(n) = ..."""
 def solve_nonhomogeneous_equation(init_conditions, associated, f_n_list):
     v = 0
-    # You have to implement this yourself! APPELTAART
+    # 1: Rewrite the recurrence equation in default form  above do n-1 before n-2
+    sorted_equation = rewrite_equation(associated)
+    # 2: Determine the characteristic equation c_n already in associated
+    characteristic_equation = determine_characteristic_equation(sorted_equation)
+    # 3: Find the roots (sympy has a module roots() also gives multiplicities)
+    poly_roots = find_roots(characteristic_equation)
+    # 4: Find the general solution
+    general_solution = find_general_solution(poly_roots)
+    # 5: Find a particular solution
+    find_particular_solution(sorted_equation, f_n_list)
 
-    # return result
+
+
+def find_particular_solution(sorted_equation, f_n_list):
+
+    A, B, C, D, E = sy.symbols('A B C D E')
+    forms_dict = {'(A*n**4+B*n**3+C*n**2+D*n+E)':[A,B,C,D,E],
+                  '(A*n**3+B*n**2+C*n+D)':[A,B,C,D],
+                  '(A*n**2+B*n+C)':[A,B,C],
+                  '(A*B**n+C)':[A,C],
+                  '(A*B**n)':[A],
+                  'A*n+B':[A,B],
+                  'A':[A]}
+    for form in forms_dict.keys():
+        result = build_solution_form(form, sorted_equation, f_n_list,forms_dict[form])
+        result = result[0]
+        flag = False
+        for k in result.keys():
+            s = str(result[k])
+            if 'A' in s or 'B' in s or 'C' in s or 'D' in s or 'E' in s:
+                flag = True
+        if not flag:
+            print('Form is: ',form)
+            print('Result is: ', result)
+            break
+
+
+def build_solution_form(form, sorted_equation, f_n_list, symbols):
+    # WARNING works for only a single an_ variable
+    # To demonstrate, i will use [an] = [an_(-2)] + [0.5*n**2 + 0.5*n] this is the odd nugget example from the slides.
+    # Brackets indicate separate parts (to be used later in the documentation of this function)
+    # We know the form is '(A*n**2+B*n+C)'
+    if form == '(A*B**n+C)' or form == '(A*B**n)':
+        b_val = 'B'
+        for fn in f_n_list:
+            if '**(n' in fn:
+                # NOTE bugs if the base of the exponent is not at +10**(n-1) but is preceeded by another term
+                b_val = fn[1:fn.find('**')]
+        form = form.replace('B',b_val)
+    eq = ''
+    for k in sorted_equation.keys():
+        # We add the coeficient to the equation
+        current = sorted_equation[k] + '*'
+        eq += current
+        new_n = '(n-' + str(k) + ')'
+        new_form = form.replace('n',new_n)
+        eq += new_form
+        eq += '+'
+    # Remove the last +
+    eq = eq[:-1]
+    # The form of the equation will now be +0*1(A*n-1**2+B*n-1+C)1*1(A*n-2**2+B*n-2+C)
+    # As an_(-1) = 0 and an_(-2) = 1
+    # We combine the f_n_list to a single string to obtain F(n)
+    f_n_final = '('
+    for f_n in f_n_list:
+        f_n_final += f_n
+    f_n_final += ')'
+    eq += '+1*'
+    eq += f_n_final
+    # We now have: +0*1(A*n-1**2+B*n-1+C)+1*1(A*n-2**2+B*n-2+C)++0.5*n**2+0.5*n
+    # To set it to zero, we substract the form (which translates to a_n) from the equation
+    eq += '-1*'
+    eq += form
+    # We now have '1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)'
+    # or with brackets: '[1(A*n**2+B*n+C)] + [0.5*n**2+0.5*n] - [(A*n**2+B*n+C)]'
+    # You read this as 0 = 1(A*n**2+B*n+C)+0.5*n**2+0.5*n-(A*n**2+B*n+C)
+    eq = parse_expr(eq)
+    eq = sy.nsimplify(eq)
+    result = sy.solve(eq, symbols, dict=True)
+    return result
 
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
@@ -372,6 +445,43 @@ def reformat_equation(equation):
         equation = equation.replace("sqrt", "", 1)
         pos_sqrt = equation.find("sqrt(")
     return equation
+
+# Functions for determining type of F(n)
+
+
+def is_linear(f_n):
+    for f in f_n:
+        if '*' in f:
+            return True
+    return False
+
+
+def is_quadratic(f_n):
+    for f in f_n:
+        if '**2' in f:
+            return True
+    return False
+
+
+def is_exponential(f_n):
+    for f in f_n:
+        if '**(n' in f:
+            return True
+    return False
+
+
+def is_cubic(f_n):
+    for f in f_n:
+        if '**3' in f:
+            return True
+    return False
+
+
+def is_to_the_fourth(f_n):
+    for f in f_n:
+        if '**4' in f:
+            return True
+    return False
 
 # Begin of program:
 if len(sys.argv) > 3:
