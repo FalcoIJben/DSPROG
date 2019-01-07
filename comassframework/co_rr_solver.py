@@ -424,7 +424,6 @@ def build_solution_form(form, sorted_equation, f_n_list, symbols):
     result = sy.solve(eq, symbols, dict=True)
     return result
 
-
 """Transforms the string equation, that is of the right side of the form "s(n) = ...",
     and wirtes it towards the file "filename", which also needs to contain the desired path."""
 def write_output_to_file(filename, equation):
@@ -531,7 +530,6 @@ else:
 
         output_filename = filename.replace(".txt", "-dir.txt")
         resulting_equ = ""
-        print('fn_list: ',f_n_list)
         # Check if the equation is a homogeneous relation
         if not f_n_list: # The list is empty
             resulting_equ = solve_homogeneous_equation(init_conditions, associated)
